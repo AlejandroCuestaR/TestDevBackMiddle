@@ -4,7 +4,7 @@ Prueba: **DESARROLLADOR JR**
 
 Deadline: **1 día**
 
-Nombre: 
+Nombre: **Alejandro Cuesta Rodríguez** 
 
 ---
 
@@ -146,3 +146,62 @@ Trabaja en SQL Server y realiza las siguientes consultas basadas en la tabla `cc
 ---
 
 Este examen evalúa tu capacidad para desarrollar APIs RESTful, realizar consultas avanzadas en SQL Server y generar reportes en formato CSV. Se valorará la organización del código, las mejores prácticas y cualquier documentación adicional que proporciones.
+
+---
+
+## Mi solución
+
+API en **ASP.NET Core 8** con **Entity Framework Core** sobre **SQL Server**. El código está en [`NuxibaApi/`](NuxibaApi) y las consultas del Ejercicio 2 en [`sql/consultas.sql`](sql/consultas.sql).
+
+### 1. Levantar SQL Server en Docker
+
+```bash
+docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=YourStrong!Passw0rd' -p 1433:1433 --name sqlserver -d mcr.microsoft.com/mssql/server:2019-latest
+```
+
+La cadena de conexión (`appsettings.json`) apunta a `localhost,1433`, base `CCenterRIA`, usuario `sa`.
+
+### 2. Crear la base y las tablas con EF Core
+
+```bash
+dotnet tool install --global dotnet-ef   # solo la primera vez
+cd NuxibaApi
+dotnet ef migrations add InitialCreate
+dotnet ef database update
+```
+
+Esto crea la base `CCenterRIA` con las tablas `ccloglogin`, `ccUsers` y `ccRIACat_Areas`.
+
+> Para que el Ejercicio 2 y el CSV devuelvan datos hay que cargar los registros del archivo `CCenterRIA.xlsx`. Ojo: las fechas vienen como número de serie de Excel, hay que convertirlas a `datetime` al importarlas.
+
+### 3. Ejecutar la API
+
+```bash
+dotnet run
+```
+
+Swagger queda en `http://localhost:5080/swagger`.
+
+### Ejercicio 1 — Endpoints
+
+| Método | Ruta | Qué hace |
+| --- | --- | --- |
+| GET | `/logins` | Lista todos los registros |
+| GET | `/logins/{id}` | Un registro por Id |
+| POST | `/logins` | Alta con validaciones |
+| PUT | `/logins/{id}` | Actualiza un registro |
+| DELETE | `/logins/{id}` | Elimina un registro |
+
+Las validaciones del POST cubren: fecha dentro del rango de SQL Server y no futura, que el `User_id` exista en `ccUsers`, y que no se registren dos logins seguidos sin un logout de por medio.
+
+### Ejercicio 2 — Consultas SQL
+
+En `sql/consultas.sql` están las tres consultas. Cada login se empareja con el movimiento siguiente del mismo usuario usando `LEAD() OVER (PARTITION BY User_id ORDER BY fecha)`; si ese movimiento es un logout, el `DATEDIFF` en segundos es la duración de la sesión. Devuelven el usuario con más tiempo logueado, el de menos, y el promedio por usuario y mes. Para el "promedio por mes" tomé la duración promedio de cada sesión; en el mismo archivo dejo anotado cómo cambiarlo al total del mes.
+
+### Ejercicio 3 — CSV
+
+```bash
+curl -L http://localhost:5080/logins/reporte/csv -o reporte_horas.csv
+```
+
+Genera el CSV con usuario, nombre completo, área y total de horas trabajadas (misma lógica de emparejado login→logout). Lleva BOM UTF-8 para que Excel respete los acentos.

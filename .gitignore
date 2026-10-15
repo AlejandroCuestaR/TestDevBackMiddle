@@ -1,0 +1,34 @@
+## Build output
+bin/
+obj/
+out/
+
+## Visual Studio / Rider
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## .NET
+project.lock.json
+project.fragment.lock.json
+artifacts/
+*.nupkg
+*.snupkg
+
+## ASP.NET local secrets
+secrets.json
+appsettings.*.local.json
+
+## Test results / coverage
+[Tt]est[Rr]esult*/
+coverage*.json
+*.trx
+
+## Logs y temporales del sistema
+*.log
+Thumbs.db
+.DS_Store
