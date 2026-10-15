@@ -21,8 +21,8 @@
         User_id,
         TipoMov,
         fecha,
-        LEAD(fecha)   OVER (PARTITION BY User_id ORDER BY fecha) AS fechaSiguiente,
-        LEAD(TipoMov) OVER (PARTITION BY User_id ORDER BY fecha) AS tipoSiguiente
+        LEAD(fecha)   OVER (PARTITION BY User_id ORDER BY fecha, Id) AS fechaSiguiente,
+        LEAD(TipoMov) OVER (PARTITION BY User_id ORDER BY fecha, Id) AS tipoSiguiente
     FROM ccloglogin
 ),
 Sesiones AS (
@@ -39,7 +39,7 @@ Totales AS (
     FROM Sesiones
     GROUP BY User_id
 )
-SELECT TOP (1)
+SELECT TOP (1) WITH TIES
     User_id,
     totalSegundos,
     CONCAT(
@@ -56,14 +56,16 @@ GO
 /* ---------------------------------------------------------------------
    2.2  Usuario que MENOS tiempo ha estado logueado (10 pts)
    Misma consulta, cambiando el ORDER BY a ascendente.
+   Supuesto: se consideran solo usuarios con al menos una sesión login->logout
+   emparejada; quien nunca cerró sesión no entra al cálculo.
    --------------------------------------------------------------------- */
 ;WITH Emparejados AS (
     SELECT
         User_id,
         TipoMov,
         fecha,
-        LEAD(fecha)   OVER (PARTITION BY User_id ORDER BY fecha) AS fechaSiguiente,
-        LEAD(TipoMov) OVER (PARTITION BY User_id ORDER BY fecha) AS tipoSiguiente
+        LEAD(fecha)   OVER (PARTITION BY User_id ORDER BY fecha, Id) AS fechaSiguiente,
+        LEAD(TipoMov) OVER (PARTITION BY User_id ORDER BY fecha, Id) AS tipoSiguiente
     FROM ccloglogin
 ),
 Sesiones AS (
@@ -78,7 +80,7 @@ Totales AS (
     FROM Sesiones
     GROUP BY User_id
 )
-SELECT TOP (1)
+SELECT TOP (1) WITH TIES
     User_id,
     totalSegundos,
     CONCAT(
@@ -108,8 +110,8 @@ GO
         User_id,
         TipoMov,
         fecha,
-        LEAD(fecha)   OVER (PARTITION BY User_id ORDER BY fecha) AS fechaSiguiente,
-        LEAD(TipoMov) OVER (PARTITION BY User_id ORDER BY fecha) AS tipoSiguiente
+        LEAD(fecha)   OVER (PARTITION BY User_id ORDER BY fecha, Id) AS fechaSiguiente,
+        LEAD(TipoMov) OVER (PARTITION BY User_id ORDER BY fecha, Id) AS tipoSiguiente
     FROM ccloglogin
 ),
 Sesiones AS (

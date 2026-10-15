@@ -206,3 +206,24 @@ curl -L http://localhost:5080/logins/reporte/csv -o reporte_horas.csv
 ```
 
 Genera el CSV con usuario, nombre completo, área y total de horas trabajadas (misma lógica de emparejado login→logout). Lleva BOM UTF-8 para que Excel respete los acentos.
+
+### Cargar los datos de ejemplo (`CCenterRIA.xlsx`)
+
+Para que el Ejercicio 2 y el CSV devuelvan resultados hay que meter los datos del archivo `CCenterRIA.xlsx` a las tablas. Un camino rápido:
+
+1. Exporta cada hoja del Excel (`ccUsers`, `ccRIACat_Areas`, `ccloglogin`) a CSV.
+2. Carga primero `ccRIACat_Areas` y `ccUsers`, y al final `ccloglogin` (para respetar las referencias). Puedes usar el asistente de importación de SSMS/Azure Data Studio o `BULK INSERT`.
+3. Las fechas de `ccloglogin` vienen como número de serie de Excel (p. ej. `44931.75`). Impórtalas a una columna numérica temporal (`fecha_serial`) y conviértelas a `datetime`:
+
+```sql
+-- Excel cuenta los días desde 1899-12-30
+UPDATE ccloglogin
+SET fecha = DATEADD(SECOND, CAST(fecha_serial * 86400 AS BIGINT), '1899-12-30');
+```
+
+### Notas y supuestos
+
+- El campo `Id` (identity) se agrega como llave primaria de `ccloglogin` porque el CRUD necesita identificar cada registro de forma única; `User_id`, `Extension`, `TipoMov` y `fecha` se mantienen tal cual los pide el enunciado.
+- La validación de "no dos logins seguidos" se hace a nivel de aplicación comparando el último movimiento del usuario. Bajo alta concurrencia, dos `POST` simultáneos del mismo usuario podrían pasar ambos la validación; para blindarlo se envolvería validación + inserción en una transacción `Serializable`.
+- El `PUT` no revalida la secuencia login/logout a propósito: corregir un registro histórico no debería bloquearse por el estado actual del usuario.
+- "Promedio de logueo por mes" se interpretó como la duración promedio de sesión por usuario y mes; en `sql/consultas.sql` queda anotado cómo cambiarlo al total del mes.
