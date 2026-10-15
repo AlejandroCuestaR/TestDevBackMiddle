@@ -163,14 +163,15 @@ La cadena de conexión (`appsettings.json`) apunta a `localhost,1433`, base `CCe
 
 ### 2. Crear la base y las tablas con EF Core
 
+La migración `InitialCreate` ya viene incluida en `NuxibaApi/Migrations/`, así que solo hay que aplicarla:
+
 ```bash
 dotnet tool install --global dotnet-ef   # solo la primera vez
 cd NuxibaApi
-dotnet ef migrations add InitialCreate
 dotnet ef database update
 ```
 
-Esto crea la base `CCenterRIA` con las tablas `ccloglogin`, `ccUsers` y `ccRIACat_Areas`.
+Esto crea la base `CCenterRIA` con las tablas `ccloglogin`, `ccUsers` y `ccRIACat_Areas`. (El modelo está en `Data/AppDbContext.cs`; si prefieres regenerar la migración desde cero, bórrala y corre `dotnet ef migrations add InitialCreate`.)
 
 > Para que el Ejercicio 2 y el CSV devuelvan datos hay que cargar los registros del archivo `CCenterRIA.xlsx`. Ojo: las fechas vienen como número de serie de Excel, hay que convertirlas a `datetime` al importarlas.
 
